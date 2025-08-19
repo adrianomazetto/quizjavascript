@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz Interativo - JavaScript</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f4f4f9;
+    }
+    .quiz-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    .options button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #eee;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    .options button:hover {
+      background: #ddd;
+    }
+    .shake {
+      animation: shake 0.3s;
+    }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+    .result {
+      margin-top: 20px;
+      text-align: left;
+    }
+    .correct { color: green; }
+    .wrong { color: red; }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h2 id="question">Carregando...</h2>
+    <div class="options" id="options"></div>
+    <button id="nextBtn" style="display:none; margin-top:15px;">Próxima Pergunta</button>
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    const quiz = [
+      {
+        q: "O que é lógica de programação?",
+        options: [
+          "Organização de instruções para resolver problemas",
+          "Decorar comandos de uma linguagem",
+          "Criar interfaces visuais",
+          "Somente resolver cálculos matemáticos"
+        ],
+        correct: 0
+      },
+      {
+        q: "Qual comando exibe uma mensagem no console?",
+        options: ["print()", "console.log()", "alert()", "log.console()"],
+        correct: 1
+      },
+      {
+        q: "Qual palavra-chave NÃO é usada para declarar variáveis em JavaScript?",
+        options: ["var", "let", "const", "define"],
+        correct: 3
+      },
+      {
+        q: "Qual tipo de dado representa verdadeiro ou falso?",
+        options: ["String", "Number", "Boolean", "Array"],
+        correct: 2
+      },
+      {
+        q: "Qual operador retorna o resto de uma divisão?",
+        options: ["/", "%", "*", "**"],
+        correct: 1
+      },
+      {
+        q: "Qual operador é recomendado para comparação estrita (valor e tipo)?",
+        options: ["==", "=", "===", "!=="],
+        correct: 2
+      },
+      {
+        q: "Qual estrutura é usada para repetir código um número conhecido de vezes?",
+        options: ["if", "while", "for", "switch"],
+        correct: 2
+      },
+      {
+        q: "Qual estrutura é usada para múltiplas condições baseadas em uma única variável?",
+        options: ["for", "if/else", "switch/case", "while"],
+        correct: 2
+      },
+      {
+        q: "Qual palavra-chave cria uma constante em JavaScript?",
+        options: ["const", "let", "var", "static"],
+        correct: 0
+      },
+      {
+        q: "Qual operador pode ser usado para escrever condições em uma única linha?",
+        options: ["if/else", "switch", "ternário (?:)", "loop for"],
+        correct: 2
+      }
+    ];
+
+    let current = 0;
+    let shuffledQuiz = shuffleArray([...quiz]);
+    let answers = [];
+
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const nextBtn = document.getElementById("nextBtn");
+    const resultEl = document.getElementById("result");
+
+    function loadQuestion() {
+      const q = shuffledQuiz[current];
+      questionEl.textContent = q.q;
+      optionsEl.innerHTML = "";
+      let shuffledOptions = shuffleArray([...q.options]);
+      shuffledOptions.forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.onclick = () => selectAnswer(q.options.indexOf(option), q.correct, btn, q);
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(selected, correct, btn, q) {
+      if (selected === correct) {
+        confetti();
+        answers.push({question: q.q, correct: true, answer: q.options[selected]});
+        nextBtn.style.display = "block";
+      } else {
+        optionsEl.classList.add("shake");
+        setTimeout(() => optionsEl.classList.remove("shake"), 300);
+        answers.push({question: q.q, correct: false, answer: q.options[selected], right: q.options[correct]});
+        nextBtn.style.display = "block";
+      }
+    }
+
+    nextBtn.onclick = () => {
+      current++;
+      if (current < shuffledQuiz.length) {
+        loadQuestion();
+        nextBtn.style.display = "none";
+      } else {
+        showResults();
+      }
+    };
+
+    function showResults() {
+      questionEl.textContent = "Resultado Final";
+      optionsEl.innerHTML = "";
+      nextBtn.style.display = "none";
+      let html = "<h3>Seus Resultados:</h3><ul>";
+      answers.forEach(a => {
+        if(a.correct){
+          html += `<li class='correct'>✔ ${a.question}<br>Resposta: ${a.answer}</li>`;
+        } else {
+          html += `<li class='wrong'>✘ ${a.question}<br>Sua resposta: ${a.answer}<br>Correta: ${a.right}</li>`;
+        }
+      });
+      html += "</ul>";
+      resultEl.innerHTML = html;
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
